@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Process Optimization Case Study</title>
+    <style>
+        :root {
+            --bain-red: #2E5090;
+            --dark-slate: #1A3A52;
+            --light-grey: #F5F7FA;
+            --border-color: #D4E4F7;
+            --text-main: #333;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', 'Helvetica', sans-serif;
+            background-color: #1a1a1a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Presentation Container */
+        #deck-container {
+            width: 1280px;
+            height: 720px;
+            background-color: white;
+            position: relative;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Slide Structure */
+        .slide {
+            display: none;
+            width: 100%;
+            height: 100%;
+            padding: 40px 50px;
+            box-sizing: border-box;
+            animation: fadeIn 0.4s ease-in-out;
+        }
+
+        .slide.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0.8; transform: translateY(2px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Standard Bain-style Header (Bottom Border) */
+        .header {
+            border-bottom: 2px solid #2E5090;
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+        }
+
+        .header h1 {
+            color: #2E5090;
+            font-size: 24px;
+            text-transform: uppercase;
+            margin: 0;
+            letter-spacing: 0.5px;
+        }
+
+        .header h2 {
+            color: var(--dark-slate);
+            font-size: 32px; /* The Governing Thought */
+            margin: 10px 0 0 0;
+            font-weight: bold;
+            line-height: 1.2;
+        }
+        
+        /* Alternative Top-Border Header style based on new images */
+        .top-border-header {
+             border-top: 4px solid #2E5090;
+             padding-top: 20px; 
+             margin-bottom: 40px;
+        }
+        .top-border-header h2 {
+            color: #2E5090;
+            font-size: 32px;
+            margin: 0;
+            line-height: 1.3;
+            font-weight: bold;
+        }
+
+
+        /* Footer / Navigation */
+        .footer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 50px;
+            background-color: #fff;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 40px;
+            box-sizing: border-box;
+            font-size: 12px;
+            color: #888;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            padding: 8px 20px;
+            background-color: #2E5090;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background-color: #1A3A52;
+        }
+
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+
+        /* --- Content Layouts --- */
+
+        /* Title Slide */
+        .title-slide-content {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            height: 80%;
+            border-left: 10px solid #2E5090;
+            padding-left: 40px;
+        }
+        .title-main { font-size: 48px; color: var(--dark-slate); margin-bottom: 20px; font-weight: bold; }
+        .title-sub { font-size: 24px; color: #666; margin-bottom: 40px; }
+        .presenter-info { font-size: 18px; color: #888; }
+
+        /* Standard Lists */
+        ul.bain-list {
+            list-style: none;
+            padding: 0;
+        }
+        ul.bain-list li {
+            margin-bottom: 15px;
+            position: relative;
+            padding-left: 25px;
+            line-height: 1.5;
+            color: var(--text-main);
+            font-size: 18px;
+        }
+        ul.bain-list li::before {
+            content: "•";
+            color: #2E5090;
+            font-weight: bold;
+            font-size: 24px;
+            position: absolute;
+            left: 0;
+            top: -2px;
+        }
+
+        /* Split Pane (From -> To) */
+        .comparison-container {
+            display: flex;
+            height: 75%;
+            position: relative;
+        }
+
+        .pane-from {
+            flex: 1;
+            background-color: var(--light-grey);
+            padding: 30px;
+            border-right: 1px solid #ccc;
+        }
+
+        .pane-to {
+            flex: 1;
+            background-color: white;
+            padding: 30px;
+        }
+
+        .chevron {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 60px;
+            height: 60px;
+            background-color: #2E5090;
+            clip-path: polygon(75% 0%, 100% 50%, 75% 100%, 0% 100%, 25% 50%, 0% 0%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            z-index: 10;
+        }
+
+        .col-header {
+            font-size: 14px;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: #888;
+            margin-bottom: 15px;
+            letter-spacing: 1px;
+        }
+        
+        .pane-title {
+            font-size: 22px;
+            color: #2E5090;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+
+        /* Constraints Grid */
+        .constraints-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+            height: 70%;
+        }
+        .constraint-card {
+            border: 1px solid var(--border-color);
+            padding: 30px;
+            background: #fff;
+            font-family: 'Arial', 'Helvetica', sans-serif;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .card-icon { font-size: 30px; color: #2E5090; margin-bottom: 15px; }
+        .card-head { font-weight: bold; font-size: 20px; margin-bottom: 12px; color: var(--dark-slate); font-family: 'Arial', 'Helvetica', sans-serif; }
+        .card-body { font-size: 16px; color: #333; line-height: 1.6; font-family: 'Arial', 'Helvetica', sans-serif; }
+
+        /* Process Flow */
+        .process-flow {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 50px;
+        }
+        .step-box {
+            background: var(--light-grey);
+            border-top: 4px solid #2E5090;
+            padding: 20px;
+            width: 22%;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .step-arrow { font-size: 30px; color: #ccc; }
+        .step-title { font-weight: bold; margin-bottom: 10px; color: var(--dark-slate); }
+        .step-desc { font-size: 13px; color: #666; }
+
+        /* Big Metrics */
+        .metrics-container {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 40px;
+            background: var(--light-grey);
+            padding: 40px;
+        }
+        .metric-item { text-align: center; }
+        .metric-val { font-size: 64px; font-weight: bold; color: #2E5090; margin-bottom: 10px; }
+        .metric-label { font-size: 18px; color: var(--dark-slate); font-weight: bold; }
+        .metric-sub { font-size: 14px; color: #666; margin-top: 5px; }
+
+/* Quote Card Styling */
+.quote-card {
+    position: relative;
+    max-width: 900px;
+    padding: 40px;
+    border-left: 8px solid #2E5090; /* Corporate Blue */
+    background: #fcfcfc;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+}
+
+.quote-mark {
+    position: absolute;
+    top: -20px;
+    left: 20px;
+    font-size: 80px;
+    color: #e0e0e0;
+    font-family: Georgia, serif;
+    line-height: 1;
+}
+
+.quote-text {
+    font-size: 28px;
+    line-height: 1.4;
+    color: #333;
+    font-style: italic;
+    margin: 0;
+    padding-left: 20px;
+    position: relative;
+    z-index: 2;
+}
+
+.quote-attribution {
+    margin-top: 30px;
+    padding-left: 20px;
+    font-weight: bold;
+    color: #666;
+    font-size: 16px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+
+    </style>
+</head>
+<body>
+
+<div id="deck-container">
+    
+    <div class="slide active">
+        <div class="title-slide-content">
+            <div class="title-main">Process Optimization in Government Offices Using AI & Excel</div>
+            <div class="title-sub">Transforming the Narcotics Control Bureau (NCB) Monthly Monitoring Report Workflow</div>
+            <div class="presenter-info">
+                Best Practices Corner Case Study<br>
+                <span style="font-size: 14px; margin-top:10px; display:block;">Session By: Sandeep</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="slide">
+    <div class="header">
+        <h1>The Leadership Mandate</h1>
+        <h2>The directive: Eliminate manual collation errors without violating data security protocols.</h2>
+    </div>
+    <div style="height: 60%; display: flex; align-items: center; justify-content: center;">
+        <div class="quote-card">
+            <div class="quote-mark">“</div>
+            
+            <p class="quote-text">
+                We need a standardized Monthly Monitoring Report where Zones can select data from dropdowns to stop the errors. 
+                <br><br>
+                <span style="font-weight: bold; color: #2E5090;">However, you cannot use Google Forms or any online database.</span> 
+                <br>
+                It must remain offline and secure.
+            </p>
+            
+            <div class="quote-attribution">
+                — Problem Statement from DDG (Operations)
+            </div>
+        </div>
+    </div>
+</div>	
+
+<div class="slide" style="padding: 40px; font-family: 'Arial', sans-serif; color: #333;">
+    
+    <div class="top-border-header" style="border-bottom: 2px solid #2E5090; margin-bottom: 40px; padding-bottom: 20px;">
+         <h2 style="margin: 0; font-size: 28px; color: #1a1a1a; max-width: 100%;">We are addressing the "Last Mile" digital gap by empowering employees with localized AI tools</h2>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 50px; width: 100%;">
+
+        <div style="width: 100%;">
+             <h3 style="color: #1A3A52; font-size: 14px; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 15px; font-weight: 900;">The Mission</h3>
+            <p style="font-size: 26px; line-height: 1.4; color: #333; margin: 0;">
+                To transform manual, fragmented reporting into a <strong>scalable, model-driven system</strong> without compromising data confidentiality or requiring expensive cloud infrastructure.
+            </p>
+        </div>
+
+        <div style="width: 100%;">
+             <h3 style="color: #1A3A52; font-size: 14px; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 20px; font-weight: 900;">Core Pillars</h3>
+             
+             <div style="display: flex; gap: 30px; width: 100%;">
+                
+                <div style="flex: 1; background: #F5F7FA; padding: 30px; border-radius: 8px; border-left: 5px solid #2E5090;">
+                    <div style="width: 50px; height: 50px; background: #D4E4F7; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; font-weight: bold; color: #2E5090;">$0</div>
+                    <h4 style="margin: 0 0 10px 0; font-size: 18px; color: #1A3A52;">Zero-Cost Infrastructure</h4>
+                    <p style="margin: 0; font-size: 14px; color: #5A6B76; line-height: 1.5;">Leverages existing hardware without additional cloud spend.</p>
+                </div>
+
+                <div style="flex: 1; background: #F5F7FA; padding: 30px; border-radius: 8px; border-left: 5px solid #2E5090;">
+                    <div style="width: 50px; height: 50px; background: #D4E4F7; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; font-weight: bold; color: #2E5090;">
+                       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2E5090" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                    </div>
+                    <h4 style="margin: 0 0 10px 0; font-size: 18px; color: #1A3A52;">Air-Gapped Security</h4>
+                    <p style="margin: 0; font-size: 14px; color: #5A6B76; line-height: 1.5;">Ensures 100% data privacy with no external data leakage.</p>
+                </div>
+
+                <div style="flex: 1; background: #F5F7FA; padding: 30px; border-radius: 8px; border-left: 5px solid #2E5090;">
+                    <div style="width: 50px; height: 50px; background: #D4E4F7; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; font-weight: bold; color: #2E5090;">AI</div>
+                    <h4 style="margin: 0 0 10px 0; font-size: 18px; color: #1A3A52;">Technical Autonomy</h4>
+                    <p style="margin: 0; font-size: 14px; color: #5A6B76; line-height: 1.5;">Empowers local teams to manage models independently.</p>
+                </div>
+
+             </div>
+        </div>
+    </div>
+</div>
+
+
+    <div class="slide">
+         <div class="top-border-header">
+             <h2>Current reporting relies on "Groundhog Day" workflows where data is trapped in Word documents</h2>
+        </div>
+        <div style="display: flex; gap: 40px; height: 65%;">
+            <div style="flex: 1; display: flex; flex-direction: column; gap: 30px;">
+                <div>
+                    <h3 style="color: var(--dark-slate); font-size: 20px; margin-top: 0;">Critical Failures:</h3>
+                    <ul class="bain-list">
+                        <li>Zones re-create forms every month</li>
+                        <li>No validation (Free-text errors)</li>
+                        <li>Manual collation at HQ (Days of work)</li>
+                    </ul>
+                </div>
+                <div style="background: #f4f4f4; padding: 30px; border-radius: 4px;">
+                    <p style="font-size: 22px; font-style: italic; color: var(--dark-slate); margin: 0; line-height: 1.4;">
+                        "If we need data for another report, we have to ask again because it's not in a database."
+                    </p>
+                </div>
+            </div>
+            <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;">
+                <img src="SS MMR.png" style="width: 100%; height: 85%; object-fit: contain; border: 2px dashed #bbb;">
+                <p style="font-size: 12px; color: #888; margin: 0; text-align: center;">Figure 1: Previous monthly seizure reporting proforma</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="header">
+            <h1>Current State Deep Dive</h1>
+            <h2>Legacy reporting mechanisms created significant data latency, redundancy, and integrity risks.</h2>
+        </div>
+        <div class="constraints-grid">
+            <div class="constraint-card" style="border-top: 4px solid #2E5090;">
+                <div class="card-icon" style="width: 50px; height: 50px; background: #D4E4F7; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; margin-bottom: 15px;">📝</div>
+                <div class="card-head">The "Word Doc" Trap</div>
+                <div class="card-body">
+                    HQ sends static Word templates to Zones. Officers manually type entries. No dropdowns or validation led to massive variations in data entry (e.g., "Seized" vs "Seizure").
+                </div>
+            </div>
+            <div class="constraint-card" style="border-top: 4px solid #2E5090;">
+                <div class="card-icon" style="width: 50px; height: 50px; background: #D4E4F7; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; margin-bottom: 15px;">🔄</div>
+                <div class="card-head">Process Redundancy</div>
+                <div class="card-body">
+                    Data was not stored in a database. If HQ needed a new report, Zones were asked to resubmit the same data in a different format, causing "Survey Fatigue."
+                </div>
+            </div>
+            <div class="constraint-card" style="border-top: 4px solid #2E5090;">
+                <div class="card-icon" style="width: 50px; height: 50px; background: #D4E4F7; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; margin-bottom: 15px;">⚠️</div>
+                <div class="card-head">Manual Collation Risk</div>
+                <div class="card-body">
+                    HQ staff spent hours manually copying data from hundreds of Word files into Master Sheets. This introduced a high margin of human error and delayed analysis.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="header">
+            <h1>Strategic Constraints Decision Tree</h1>
+            <h2>Standard digital solutions were rendered inviable by security protocols and cost structures.</h2>
+        </div>
+        <div style="display:flex; height: 60%; align-items: center; gap: 40px;">
+            <div style="flex:1; padding: 20px; background: #f0f5ff; border: 1px dashed var(--bain-red);">
+                <h3 style="color:var(--bain-red);">Path A: Cloud Solutions</h3>
+                <p style="font-weight:bold;">Google Forms / Online Databases</p>
+                <ul class="bain-list" style="font-size:16px;">
+                    <li>Strict data confidentiality rules prohibit uploading operational data to public clouds.</li>
+                    <li><strong>Outcome:</strong> <span style="color:red">REJECTED</span></li>
+                </ul>
+            </div>
+            <div style="font-size: 24px; color: #ccc;">VS</div>
+            <div style="flex:1; padding: 20px; background: #f4f4f4; border: 1px dashed #999;">
+                <h3 style="color:#333;">Path B: Enterprise Software</h3>
+                <p style="font-weight:bold;">Adobe Acrobat Pro / Custom App</p>
+                <ul class="bain-list" style="font-size:16px;">
+                    <li>Requires paid subscriptions (High recurring cost).</li>
+                    <li>Steep learning curve for creation.</li>
+                    <li><strong>Outcome:</strong> <span style="color:red">REJECTED</span></li>
+                </ul>
+            </div>
+            <div style="font-size: 24px; color: var(--bain-red);">→</div>
+            <div style="flex:1; padding: 20px; background: #fff; border: 2px solid var(--bain-red); box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
+                <h3 style="color:var(--bain-red);">The "AI-Agile" Path</h3>
+                <p style="font-weight:bold;">HTML + Power Query</p>
+                <ul class="bain-list" style="font-size:16px;">
+                    <li><strong>Zero Cost:</strong> Uses browser & Excel.</li>
+                    <li><strong>AI-Driven:</strong> Prompts write the code.</li>
+                    <li><strong>Secure:</strong> 100% Offline execution.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="header">
+            <h1>Target State Design</h1>
+            <h2>AI-assisted development enabled a transition from manual fragmentation to a standardized, model-driven system.</h2>
+        </div>
+        
+        <div class="comparison-container">
+            <div class="pane-from">
+                <div class="col-header">FROM: Legacy State (Manual)</div>
+                <div class="pane-title">Fragmented & Error-Prone</div>
+                <ul class="bain-list" style="font-size:16px;">
+                    <li><strong>Unstructured Input:</strong> Free-text fields in Word/PDF led to cleaning nightmares.</li>
+                    <li><strong>Development Bottleneck:</strong> Creating editable PDFs required specialized IT skills and licensed software.</li>
+                    <li><strong>Data Latency:</strong> Consolidation took days after month-end.</li>
+                </ul>
+                <div style="margin-top: 40px; font-style: italic; color: #666;">
+                    "We spent more time formatting the forms than analyzing the data."
+                </div>
+            </div>
+
+            <div class="chevron">>></div>
+
+            <div class="pane-to">
+                <div class="col-header">TO: Future State (AI-Enabled)</div>
+                <div class="pane-title">Standardized & Automated</div>
+                <ul class="bain-list" style="font-size:16px;">
+                    <li><strong>Standardized Logic:</strong> AI generates HTML forms with Dropdowns/Radio buttons in minutes.</li>
+                    <li><strong>Zero-Touch Consolidation:</strong> Power Query automatically pulls data from folders (ETL).</li>
+                    <li><strong>Scalability:</strong> Officers trained to "prompt" their own forms, removing IT dependency.</li>
+                </ul>
+                <div style="margin-top: 40px; padding: 15px; background: #f0f5ff; border-left: 3px solid var(--bain-red);">
+                    <strong>Key Insight:</strong> We didn't just build a tool; we built a capability.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="header">
+            <h1>Implementation Architecture</h1>
+            <h2>We utilized AI agents to bypass the coding barrier, reducing development time by >90%.</h2>
+        </div>
+        
+        <div style="margin-bottom: 20px;"><strong>The "Prompt-to-Product" Workflow:</strong></div>
+        
+        <div class="process-flow">
+            <div class="step-box">
+                <div class="step-title">1. Prompt Engineering</div>
+                <div class="step-desc">Officer prompts AI: "Create an HTML form for Seizure Report with dropdowns for drug type."</div>
+            </div>
+            <div class="step-arrow">→</div>
+            <div class="step-box">
+                <div class="step-title">2. Form Deployment</div>
+                <div class="step-desc">AI generates single-file HTML. Sent to Zones via secure email (offline).</div>
+            </div>
+            <div class="step-arrow">→</div>
+            <div class="step-box">
+                <div class="step-title">3. Data Entry</div>
+                <div class="step-desc">Zones fill form in browser. Script exports standardized CSV/Excel file.</div>
+            </div>
+            <div class="step-arrow">→</div>
+            <div class="step-box">
+                <div class="step-title">4. Auto-Consolidation</div>
+                <div class="step-desc">Power Query scans the folder, combines files, and updates the Dashboard.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 80%; text-align: center;">
+            <div style="font-size: 80px; color: var(--bain-red); margin-bottom: 20px;">▶</div>
+            <h1 style="color: var(--dark-slate); font-size: 40px; margin-bottom: 10px;">Live Demonstration</h1>
+            <p style="font-size: 24px; color: #666; max-width: 600px;">
+                I will now demonstrate how to create a compliant HTML reporting form in under 3 minutes using AI.
+            </p>
+        </div>
+    </div>
+
+    <div class="slide">
+        <div class="header">
+            <h1>Impact & Sustainability</h1>
+            <h2>The initiative delivered immediate efficiency gains and established a scalable blueprint for MDOs.</h2>
+        </div>
+        
+        <div class="metrics-container">
+            <div class="metric-item">
+                <div class="metric-val">>60%</div>
+                <div class="metric-label">Reduction in NVA Time</div>
+                <div class="metric-sub">Non-Value Added administrative work eliminated.</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-val">$0</div>
+                <div class="metric-label">Software Cost</div>
+                <div class="metric-sub">Leveraged existing infrastructure (Excel + Browser).</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-val">100%</div>
+                <div class="metric-label">Staff Adoption</div>
+                <div class="metric-sub">3 Officers fully trained to build & edit forms.</div>
+            </div>
+        </div>
+
+        <div style="margin-top: 40px; display: flex; gap: 20px;">
+            <div style="flex: 1; padding: 20px; background: #fff; border: 1px solid #ccc;">
+                <strong>Before (The Ask):</strong> HQ relied on IT vendors or external help for minor form changes.
+            </div>
+            <div style="flex: 1; padding: 20px; background: #f0f5ff; border: 1px solid var(--bain-red);">
+                <strong>After (The Result):</strong> "One week hand-holding" session enabled internal staff to own the process.
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div>CONFIDENTIAL - NCB CASE STUDY</div>
+        <div class="nav-buttons">
+            <button onclick="prevSlide()" id="btnPrev">PREVIOUS</button>
+            <span id="slide-indicator" style="padding: 8px 10px; background: #f4f4f4; border: 1px solid #ddd; display:flex; align-items:center;">1 / 9</span>
+            <button onclick="nextSlide()" id="btnNext">NEXT</button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.slide');
+    const indicator = document.getElementById('slide-indicator');
+    const btnPrev = document.getElementById('btnPrev');
+    const btnNext = document.getElementById('btnNext');
+
+    function updateSlide() {
+        slides.forEach((slide, index) => {
+            slide.classList.remove('active');
+            if (index === currentSlide) {
+                slide.classList.add('active');
+            }
+        });
+        indicator.innerText = `${currentSlide + 1} / ${slides.length}`;
+        
+        btnPrev.disabled = currentSlide === 0;
+        btnNext.disabled = currentSlide === slides.length - 1;
+    }
+
+    function nextSlide() {
+        if (currentSlide < slides.length - 1) {
+            currentSlide++;
+            updateSlide();
+        }
+    }
+
+    function prevSlide() {
+        if (currentSlide > 0) {
+            currentSlide--;
+            updateSlide();
+        }
+    }
+
+    // Initialize
+    updateSlide();
+
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowRight') nextSlide();
+        if (e.key === 'ArrowLeft') prevSlide();
+    });
+</script>
+
+</body>
+</html>
